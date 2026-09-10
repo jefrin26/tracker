@@ -23,7 +23,8 @@ from ..utils import err, ok
 
 
 def cmd_init(args: argparse.Namespace) -> None:
-    TrackerService().init()
+    path = getattr(args, "path", None)
+    TrackerService().init(path=path)
 
 
 def cmd_log(args: argparse.Namespace) -> None:

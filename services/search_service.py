@@ -1,11 +1,11 @@
 """Search service."""
 
-from ..config import TRACKER_HOME
+from ..config import get_tracker_home
 
 
 def search(keyword: str) -> str:
     results: list[str] = []
-    daily_root = TRACKER_HOME / "daily"
+    daily_root = get_tracker_home() / "daily"
     if not daily_root.exists():
         return "No logs found."
     kw = keyword.lower()

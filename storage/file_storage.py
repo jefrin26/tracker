@@ -5,20 +5,44 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ..config import TRACKER_HOME
+from ..config import get_tracker_home
+
+# Backward compat: expose TRACKER_HOME for code/tests that patch it directly
+# This will be kept in sync via _resolve_home()
+TRACKER_HOME = get_tracker_home()
+_ORIG_STORAGE_HOME = TRACKER_HOME
+
+
+def _resolve_home() -> Path:
+    """Resolve current tracker home, respecting patched globals for backward compat."""
+    # Check if this module's TRACKER_HOME was patched (tests do `fs.TRACKER_HOME = Path(tmp)`)
+    current = globals().get("TRACKER_HOME", _ORIG_STORAGE_HOME)
+    if isinstance(current, Path) and current != _ORIG_STORAGE_HOME:
+        # If patched to a different value, use it
+        # Also sync config global so other modules see it
+        try:
+            import tracker.config as cfg
+
+            if cfg.TRACKER_HOME != current:
+                cfg.TRACKER_HOME = current
+                cfg.CONFIG_PATH = current / "config.json"
+        except Exception:
+            pass
+        return current
+    return get_tracker_home()
 
 
 def daily_log_path(date: datetime | None = None) -> Path:
     """Get path for a daily log file."""
     d = date or datetime.now()
-    p = TRACKER_HOME / "daily" / str(d.year) / f"{d.month:02d}"
+    p = _resolve_home() / "daily" / str(d.year) / f"{d.month:02d}"
     p.mkdir(parents=True, exist_ok=True)
     return p / f"{d.strftime('%Y-%m-%d')}.md"
 
 
 def habit_log_path() -> Path:
     """Get path for habit log."""
-    p = TRACKER_HOME / "habits"
+    p = _resolve_home() / "habits"
     p.mkdir(parents=True, exist_ok=True)
     return p / "habits.md"
 
@@ -26,7 +50,7 @@ def habit_log_path() -> Path:
 def day_context_path(date: datetime | None = None) -> Path:
     """Get path for day context JSON."""
     d = date or datetime.now()
-    p = TRACKER_HOME / "day_context"
+    p = _resolve_home() / "day_context"
     p.mkdir(parents=True, exist_ok=True)
     return p / f"{d.strftime('%Y-%m-%d')}.json"
 
@@ -36,7 +60,7 @@ def weekly_report_path(date: datetime | None = None) -> Path:
     d = date or datetime.now()
     iso = d.isocalendar()
     week_id = f"{iso[0]}-W{iso[1]:02d}"
-    p = TRACKER_HOME / "weekly"
+    p = _resolve_home() / "weekly"
     p.mkdir(parents=True, exist_ok=True)
     return p / f"{week_id}.md"
 
@@ -45,14 +69,14 @@ def monthly_report_path(date: datetime | None = None) -> Path:
     """Get path for monthly report."""
     d = date or datetime.now()
     month_id = d.strftime("%Y-%m")
-    p = TRACKER_HOME / "monthly"
+    p = _resolve_home() / "monthly"
     p.mkdir(parents=True, exist_ok=True)
     return p / f"{month_id}.md"
 
 
 def project_path(name: str) -> Path:
     """Get path for a project directory."""
-    p = TRACKER_HOME / "projects" / name
+    p = _resolve_home() / "projects" / name
     p.mkdir(parents=True, exist_ok=True)
     return p
 
@@ -60,7 +84,7 @@ def project_path(name: str) -> Path:
 def export_path(date: datetime | None = None) -> Path:
     """Get path for JSON export."""
     d = date or datetime.now()
-    p = TRACKER_HOME / "export"
+    p = _resolve_home() / "export"
     p.mkdir(parents=True, exist_ok=True)
     return p / f"{d.strftime('%Y-%m-%d')}.json"
 

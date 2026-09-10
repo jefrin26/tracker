@@ -82,7 +82,9 @@ class AIClient:
                 return None
             if status == 401:
                 from ..utils import err
-                err("Invalid API key (401). Check the api_key in ~/tracker/config.json")
+                from ..config import get_tracker_home
+
+                err(f"Invalid API key (401). Check the api_key in {get_tracker_home()}/config.json")
                 return None
             if status != 200:
                 from ..utils import err

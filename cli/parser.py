@@ -10,7 +10,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("init", help="Initialize tracker folders and config")
+    init_p = sub.add_parser("init", help="Initialize tracker folders and config")
+    init_p.add_argument("--path", default=None, help="Custom path for tracker data (default: ~/tracker)")
 
     log_p = sub.add_parser("log", help="Log an activity")
     log_p.add_argument("activity", nargs="?", default=None, help="Activity description")
