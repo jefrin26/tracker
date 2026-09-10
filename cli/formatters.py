@@ -32,7 +32,7 @@ def format_review(service: TrackerService, stream: bool = True) -> None:
     prompt = daily_review_prompt()
     resp = ai.ask(
         prompt,
-        system_prompt="You are a brutally honest life coach who also considers sleep patterns and day context.",
+        system_prompt="You are a brutally honest, time-aware life coach. ALWAYS compare the user's logs, goals and progress against the CURRENT TIME provided in the prompt. Do NOT treat every review as end-of-day — if it's morning, give a check-in; if midday, give a mid-day correction; only at night give a final roast. Also consider sleep patterns and day context.",
         stream=stream,
     )
     if stream:

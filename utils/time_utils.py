@@ -86,3 +86,60 @@ def today_str() -> str:
 def yesterday_str() -> str:
     """Yesterday as YYYY-MM-DD."""
     return (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+
+def get_day_phase(hour: int) -> str:
+    """Return human day phase for hour (0-23)."""
+    if 5 <= hour < 12:
+        return "morning"
+    if 12 <= hour < 17:
+        return "afternoon"
+    if 17 <= hour < 21:
+        return "evening"
+    return "night"
+
+
+def day_progress_info(
+    now: datetime | None = None, wake_str: str = "07:00", sleep_str: str = "23:00"
+) -> dict:
+    """Calculate day progress relative to wake→sleep window and midnight.
+
+    Returns dict with: phase, elapsed_h, remaining_h, pct_wake,
+    pct_midnight, gap info helper.
+    """
+    n = now or datetime.now()
+    hh, mm = n.hour, n.minute
+    cur_m = hh * 60 + mm
+
+    wake = parse_time(wake_str) or (7, 0)
+    sleep = parse_time(sleep_str) or (23, 0)
+    wake_m = to_minutes(*wake)
+    sleep_m = to_minutes(*sleep)
+    # Handle overnight sleep window (e.g., sleep 01:00)
+    if sleep_m <= wake_m:
+        sleep_m += 24 * 60
+        if cur_m < wake_m:
+            cur_m += 24 * 60
+
+    total_wake = sleep_m - wake_m
+    elapsed_wake = max(0, min(cur_m - wake_m, total_wake))
+    remaining_wake = max(0, total_wake - elapsed_wake)
+    pct_wake = (elapsed_wake / total_wake * 100) if total_wake else 0
+
+    # Midnight progress (0-24h)
+    cur_mid_m = hh * 60 + mm
+    pct_mid = cur_mid_m / (24 * 60) * 100
+    remaining_mid = 24 * 60 - cur_mid_m
+
+    return {
+        "now": n,
+        "phase": get_day_phase(hh),
+        "elapsed_wake_h": elapsed_wake / 60,
+        "remaining_wake_h": remaining_wake / 60,
+        "pct_wake": pct_wake,
+        "elapsed_mid_h": cur_mid_m / 60,
+        "remaining_mid_h": remaining_mid / 60,
+        "pct_mid": pct_mid,
+        "wake_str": wake_str,
+        "sleep_str": sleep_str,
+    }
