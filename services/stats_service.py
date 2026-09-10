@@ -8,12 +8,17 @@ def _total_minutes(date: datetime | None = None) -> int:
     content = read_log(date)
     total = 0
     for line in content.splitlines():
-        if line.startswith("|") and "---" not in line and "Time" not in line:
+        if line.startswith("|") and "---" not in line and "Time" not in line and "Start" not in line:
             parts = [p.strip() for p in line.strip("|").split("|")]
-            if len(parts) >= 3:
+            dur = None
+            # New format: | Start | End | Activity | Duration | Type | Notes | → duration at index 3
+            if len(parts) >= 6 and ":" in parts[0] and ":" in parts[1]:
+                dur = parts[3].replace("m", "").strip()
+            elif len(parts) >= 3:
+                # Old format fallback: | Time | Activity | Duration | Type | Notes |
                 dur = parts[2].replace("m", "").strip()
-                if dur.isdigit():
-                    total += int(dur)
+            if dur and dur.isdigit():
+                total += int(dur)
     return total
 
 
@@ -23,7 +28,7 @@ def today() -> str:
     entries = sum(
         1
         for line in read_log().splitlines()
-        if line.startswith("|") and "---" not in line and "Time" not in line
+        if line.startswith("|") and "---" not in line and "Time" not in line and "Start" not in line
     )
     from ..config import get_config
     target = get_config().get("daily_target_hours", 4)

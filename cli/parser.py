@@ -14,7 +14,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     log_p = sub.add_parser("log", help="Log an activity")
     log_p.add_argument("activity", nargs="?", default=None, help="Activity description")
-    log_p.add_argument("duration", nargs="?", type=int, default=None, help="Duration in minutes")
+    log_p.add_argument("start", nargs="?", default=None, help="Start time HH:MM (e.g. 09:00)")
+    log_p.add_argument("end", nargs="?", default=None, help="End time HH:MM (e.g. 10:30)")
     log_p.add_argument("type", nargs="?", default="work", help="Activity type")
     log_p.add_argument("--notes", "-n", default="", help="Additional notes")
 

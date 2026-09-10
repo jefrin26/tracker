@@ -9,10 +9,15 @@ def daily_review_prompt() -> str:
     """Build the daily review prompt with full context."""
     data = parse_entries()
 
-    activities_str = "\n".join(
-        f"  {a['time']} | {a['activity']} ({a['duration']}) — {a['type']}"
-        for a in data["activities"]
-    )
+    def _fmt_activity(a: dict) -> str:
+        # Show start → end if available, otherwise fallback to time
+        if a.get("end"):
+            time_part = f"{a['start']} → {a['end']}"
+        else:
+            time_part = a.get("time", a.get("start", ""))
+        return f"  {time_part} | {a['activity']} ({a['duration']}) — {a['type']}"
+
+    activities_str = "\n".join(_fmt_activity(a) for a in data["activities"])
     goals_str = ", ".join(data["goals"]) or "None"
     completed_str = ", ".join(data["completed"]) or "None"
     scores = data["scores"]

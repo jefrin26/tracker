@@ -43,6 +43,29 @@ def uptime_minutes(bedtime: str, wake_time: str) -> Optional[int]:
     return wake_m - bed_m
 
 
+def duration_between(start: str, end: str) -> Optional[int]:
+    """Calculate minutes between start and end times (handles overnight).
+
+    Returns None if either time is invalid, or if duration is 0.
+    If end < start, treats end as next day (overnight session).
+    If end == start, returns None (zero duration).
+    """
+    s = parse_time(start)
+    e = parse_time(end)
+    if not s or not e:
+        return None
+    start_m = to_minutes(*s)
+    end_m = to_minutes(*e)
+    if end_m == start_m:
+        return None
+    if end_m < start_m:
+        end_m += 24 * 60
+    diff = end_m - start_m
+    if diff <= 0:
+        return None
+    return diff
+
+
 def format_uptime(minutes: Optional[int]) -> str:
     """Format minutes as 'X.Xh' or '—'."""
     if minutes is None:
